@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  server:
+    build: ./server
+    container_name: agile_bookstore_server
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER} 
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+      - PORT=8000                 
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
