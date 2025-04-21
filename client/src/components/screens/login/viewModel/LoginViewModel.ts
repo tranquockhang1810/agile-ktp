@@ -14,8 +14,7 @@ const LoginViewModel = (repo: AuthenRepo) => {
   const { onLogin, localStrings } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [loading, setLoading] = useState(false); 
   const [observers] = useState<LoginObserver[]>([]);
 
   const addObserver = (observer: LoginObserver) => observers.push(observer);
@@ -69,7 +68,7 @@ const LoginViewModel = (repo: AuthenRepo) => {
     }
   }, [error, localStrings]);
 
-  return { login, loading, googleLoading, addObserver, removeObserver };
+  return { login, loading, addObserver, removeObserver };
 };
 
 export default LoginViewModel;
