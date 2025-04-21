@@ -17,18 +17,6 @@ const validateMaxLength = (value, max) => {
   return value.length <= max;
 }
 
-const validateBirthDate = (birthDate) => {
-  const today = new Date();
-  // Tách chuỗi theo định dạng DD-MM-YYYY
-  const [day, month, year] = birthDate.split("-").map(Number);
-
-  // Tạo đối tượng Date từ thông tin đã tách
-  const formattedDate = new Date(year, month - 1, day);
-
-  // Kiểm tra ngày có hợp lệ không (không lớn hơn hôm nay)
-  return formattedDate <= today;
-};
-
 const validatePagination = (req, res, next) => {
   let { page, limit } = req.query;
 
@@ -51,6 +39,5 @@ module.exports = {
   validateLength,
   validateMinLength,
   validateMaxLength,
-  validateBirthDate,
   validatePagination
 }
