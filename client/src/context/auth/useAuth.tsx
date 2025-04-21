@@ -6,53 +6,45 @@ import React, {
   useState,
   ReactNode,
   useEffect,
-  useMemo,
 } from "react";
 import { AuthContextType } from "./authContextType";
 import { VnLocalizedStrings } from "@/utils/localizedStrings/vietnam";
 import { ENGLocalizedStrings } from "@/utils/localizedStrings/english";
 import translateLanguage from "../../utils/i18n/translateLanguage";
 import { useRouter } from "next/navigation";
-import { UserModel, LoginResponseModel } from "../../api/features/authenticate/model/LoginModel";
-import { jwtDecode, JwtPayload } from "jwt-decode";
-import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-
-interface DecodedToken extends JwtPayload {
-  // Add custom fields if needed, e.g., userId
-}
+import { UserModel } from "../../api/features/authenticate/model/LoginModel";
+import { jwtDecode } from "jwt-decode";
 
 class AuthManager {
-  private static instance: AuthManager | null = null;
+  private static instance: AuthManager;
   private localStrings: any = VnLocalizedStrings;
   private language: "vi" | "en" = "vi";
   private user: UserModel | null = null;
   private isAuthenticated: boolean = false;
-  private router: AppRouterInstance | null = null;
-  private listeners: Set<() => void> = new Set();
+  private router: any;
+  private listeners: Array<() => void> = [];
 
-  private constructor() {}
-
-  public static getInstance(): AuthManager {
+  private constructor(router: any) { 
     if (!AuthManager.instance) {
-      AuthManager.instance = new AuthManager();
+      AuthManager.instance = this;  
     }
-    return AuthManager.instance;
+    this.router = router;
   }
 
-  public setRouter(router: AppRouterInstance) {
-    if (!this.router) {
-      this.router = router;
-    }
+  public static getInstance(router?: any): AuthManager { 
+    if (!AuthManager.instance && router)
+      return new AuthManager(router);
+    return AuthManager.instance!;
   }
 
   private notifyListeners() {
     this.listeners.forEach((listener) => listener());
   }
 
-  public subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
+  public subscribe(listener: () => void) {
+    this.listeners.push(listener);
     return () => {
-      this.listeners.delete(listener);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
@@ -73,155 +65,95 @@ class AuthManager {
   }
 
   public checkLanguage() {
-    if (typeof window !== "undefined" && window.localStorage) {
+    if (typeof window !== 'undefined' && window.localStorage) {
       const storedLanguage = localStorage.getItem("language");
-      const lang = storedLanguage === "vi" ? "vi" : "en";
-      if (this.language !== lang) {
-        this.language = lang;
-        this.localStrings = lang === "vi" ? VnLocalizedStrings : ENGLocalizedStrings;
-        this.notifyListeners();
-      } else if (!this.localStrings) {
-        this.localStrings = lang === "vi" ? VnLocalizedStrings : ENGLocalizedStrings;
-        this.notifyListeners();
-      }
-    } else if (!this.localStrings) {
-      this.localStrings = this.language === "vi" ? VnLocalizedStrings : ENGLocalizedStrings;
-    }
-  }
-
-  public changeLanguage() {
-    if (typeof window !== "undefined" && window.localStorage) {
-      const lng = this.language === "vi" ? "en" : "vi";
-      translateLanguage(lng)
-        .then(() => {
-          localStorage.setItem("language", lng);
-          this.language = lng;
-          this.localStrings = lng === "vi" ? VnLocalizedStrings : ENGLocalizedStrings;
-          this.notifyListeners();
-        })
-        .catch((error) => {
-          console.error("Error changing language:", error);
-        });
-    }
-  }
-
-  public onLogin(loginData: LoginResponseModel) {
-    if (!loginData || !loginData.user || typeof loginData.accesstoken !== "string" || loginData.accesstoken.trim() === "") {
-      console.error("Invalid login data");
-      return;
-    }
-
-    const { user, accesstoken } = loginData;
-
-    if (typeof window !== "undefined" && window.localStorage) {
-      try {
-        const decodedToken = jwtDecode<DecodedToken>(accesstoken);
-        const expiresAt = decodedToken.exp ? new Date(decodedToken.exp * 1000) : null;
-
-        if (expiresAt && expiresAt < new Date()) {
-          console.warn("Token expired");
-          this.handleLogoutInternal();
-          return;
-        }
-
-        localStorage.setItem("user", JSON.stringify(user));
-        localStorage.setItem("accesstoken", accesstoken);
-
-        const cookieOptions = `path=/; ${
-          window.location.protocol === "https:" ? "SameSite=None; Secure" : "SameSite=Lax"
-        }${expiresAt ? `; expires=${expiresAt.toUTCString()}` : ""}`;
-
-        document.cookie = `accesstoken=${accesstoken}; ${cookieOptions}`;
-
-        this.isAuthenticated = true;
-        this.user = user;
-        console.log("User logged in:", this.user); // Debug log
-        this.notifyListeners();
-        this.router?.push("/home");
-      } catch (error) {
-        console.error("Error during login:", error);
-        this.handleLogoutInternal();
-      }
-    } else {
-      try {
-        jwtDecode<DecodedToken>(accesstoken);
-        this.isAuthenticated = true;
-        this.user = user;
-        this.notifyListeners();
-      } catch (error) {
-        console.error("Error decoding token:", error);
-        this.isAuthenticated = false;
-        this.user = null;
-        this.notifyListeners();
+      if (storedLanguage === "vi") {
+        this.language = "vi";
+        this.localStrings = VnLocalizedStrings;
+      } else {
+        this.language = "en";
+        this.localStrings = ENGLocalizedStrings;
       }
     }
-  }
-
-  public onUpdateProfile(updatedUser: UserModel) {
-    if (!updatedUser) {
-      return;
-    }
-    if (typeof window !== "undefined" && window.localStorage) {
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-    }
-    this.user = updatedUser;
     this.notifyListeners();
   }
 
-  private handleLogoutInternal() {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("user");
-      localStorage.removeItem("accesstoken");
-      document.cookie = "accesstoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax";
-      document.cookie = "accesstoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=None; Secure";
+  public changeLanguage() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const lng = this.language === "vi" ? "en" : "vi";
+      translateLanguage(lng).then(() => {
+        localStorage.setItem("language", lng);
+        this.language = lng;
+        this.localStrings = lng === "vi" ? VnLocalizedStrings : ENGLocalizedStrings;
+        this.notifyListeners();
+      });
     }
-    this.isAuthenticated = false;
-    this.user = null;
+  }
+
+  public onLogin(user: any) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem("user", JSON.stringify(user.user));
+      localStorage.setItem("accesstoken", user.accessToken);
+
+      const decodedToken: any = jwtDecode(user.accessToken);
+      const expiresAt = new Date(decodedToken.exp * 1000);
+      document.cookie = `accesstoken=${user.accessToken}; path=/; ${
+        window.location.protocol === 'http:'
+          ? 'SameSite=Lax'
+          : 'SameSite=None; Secure'
+      }; expires=${expiresAt.toUTCString()}`;
+    }
+
+    this.isAuthenticated = true;
+    this.user = user.user;
+    this.notifyListeners();
+    this.router.push("/home");
+  }
+
+  public onUpdateProfile(user: any) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem("user");
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+
+    this.isAuthenticated = true;
+    this.user = user;
     this.notifyListeners();
   }
 
   public async onLogout() {
-    this.handleLogoutInternal();
-    this.router?.push("/login");
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("accesstoken");
+      document.cookie =
+        "accesstoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    }
+    this.isAuthenticated = false;
+    this.user = null;
+    this.notifyListeners();
+    this.router.push("/login");
   }
 
-  public isLoginUser(userId: string): boolean {
-    return !!this.user && this.user.id === userId;
+  public isLoginUser(userId: string) {
+    return this.user?.id === userId;
   }
 
   public checkAuthStatus() {
-    if (typeof window !== "undefined" && window.localStorage) {
-      const storedAccessToken = localStorage.getItem("accesstoken");
+    if (typeof window !== 'undefined' && window.localStorage) {
       const storedUser = localStorage.getItem("user");
+      const storedAccessToken = localStorage.getItem("accesstoken");
 
-      console.log("Stored Access Token:", storedAccessToken); // Debug log
-      console.log("Stored User:", storedUser); // Debug log
-
-      if (storedAccessToken && storedUser) {
-        try {
-          const decodedToken = jwtDecode<DecodedToken>(storedAccessToken);
-          const expiresAt = decodedToken.exp ? new Date(decodedToken.exp * 1000) : null;
-
-          if (!expiresAt || expiresAt < new Date()) {
-            console.warn("Token expired or invalid");
-            this.handleLogoutInternal();
-            return;
-          }
-
-          this.user = JSON.parse(storedUser) as UserModel;
+      try {
+        if (storedUser && storedAccessToken) {
+          this.user = JSON.parse(storedUser);
           this.isAuthenticated = true;
-          console.log("Auth status updated:", this.user); // Debug log
-        } catch (error) {
-          console.error("Error checking auth status:", error);
-          this.handleLogoutInternal();
+        } else {
+          this.isAuthenticated = false;
         }
-      } else {
-        console.warn("No token or user found in localStorage");
-        this.handleLogoutInternal();
+      } catch (error) { 
+        localStorage.removeItem("user");
+        this.isAuthenticated = false;
       }
-    } else {
-      this.isAuthenticated = false;
-      this.user = null;
     }
     this.notifyListeners();
   }
@@ -229,49 +161,44 @@ class AuthManager {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const router = useRouter();
-  const authManager = useMemo(() => AuthManager.getInstance(), []);
-  const [isInitialising, setIsInitialising] = useState(true);
-  const [, forceUpdate] = useState({});
+  const authManager = AuthManager.getInstance(router);  
+
+  const [state, setState] = useState({});
 
   useEffect(() => {
-    authManager.setRouter(router);
-
     const unsubscribe = authManager.subscribe(() => {
-      forceUpdate({});
+      setState({});
     });
-
-    // Check language and authentication status
-    authManager.checkLanguage();
-    authManager.checkAuthStatus();
-    setIsInitialising(false); // Mark initialization complete
-
     return unsubscribe;
-  }, [authManager, router]);
+  }, [authManager]);
 
-  const contextValue = useMemo<AuthContextType>(
-    () => ({
-      onLogin: (data) => authManager.onLogin(data),
-      onLogout: () => authManager.onLogout(),
-      localStrings: authManager.getLocalStrings(),
-      changeLanguage: () => authManager.changeLanguage(),
-      language: authManager.getLanguage(),
-      setLanguage: () => {},
-      isAuthenticated: authManager.getIsAuthenticated(),
-      user: authManager.getUser(),
-      onUpdateProfile: (user) => authManager.onUpdateProfile(user),
-      isLoginUser: (id) => authManager.isLoginUser(id),
-    }),
-    [authManager]
+  useEffect(() => {
+    authManager.checkLanguage();  
+    authManager.checkAuthStatus(); 
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        onLogin: authManager.onLogin.bind(authManager),
+        onLogout: authManager.onLogout.bind(authManager),
+        localStrings: authManager.getLocalStrings(),
+        changeLanguage: authManager.changeLanguage.bind(authManager),
+        language: authManager.getLanguage(),
+        setLanguage: () => { },  
+        isAuthenticated: authManager.getIsAuthenticated(),
+        user: authManager.getUser(),
+        onUpdateProfile: authManager.onUpdateProfile.bind(authManager),
+        isLoginUser: authManager.isLoginUser.bind(authManager),
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
-
-  // Show loading state while initializing
-  if (isInitialising) {
-    return <div>Đang tải...</div>;
-  }
-
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = (): AuthContextType => {

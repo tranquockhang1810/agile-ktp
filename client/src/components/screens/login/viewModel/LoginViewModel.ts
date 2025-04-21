@@ -37,19 +37,17 @@ const LoginViewModel = (repo: AuthenRepo) => {
       setLoading(true);
       notifyLoading(true);
       const res = await repo.login(data);
-
-      if (res?.data) {
-        try {
+  
+      if (res?.data && typeof res.data.accessToken === "string") {
+        try { 
           onLogin(res.data);
           notifyLoading(false);
           notifySuccess(res.data);
           setTimeout(() => router.replace("/home"), 100);
-        } catch (navError) {
-          console.error("Navigation or auth error:", navError);
+        } catch (navError) { 
           notifyLoading(false, localStrings.Login.LoginFailed);
         }
-      } else {
-        console.log("Error Response:", res?.error);
+      } else { 
         if (res?.error?.code === CustomStatusCode.EmailOrPasswordIsWrong) {
           notifyLoading(false, localStrings.Login.LoginFailed);
         } else if (res?.error?.code === CustomStatusCode.AccountBlockedByAdmin) {
@@ -58,8 +56,7 @@ const LoginViewModel = (repo: AuthenRepo) => {
           notifyLoading(false, localStrings.Login.LoginFailed);
         }
       }
-    } catch (error: any) {
-      console.error("Login Error:", error);
+    } catch (error: any) { 
       notifyLoading(false, localStrings.Login.LoginFailed);
     } finally {
       setLoading(false);

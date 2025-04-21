@@ -21,8 +21,7 @@ const Login = () => {
           form.setFields([{ name: "email", errors: [error] }]);
         }
       },
-      onLoginSuccess: (data: any) => {
-        console.log("Login successful:", data);
+      onLoginSuccess: (data: any) => { 
         form.setFields([{ name: "email", errors: [] }, { name: "password", errors: [] }]);
       },
     };
