@@ -118,7 +118,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 key: index.toString(),
                 label: (
                     <div
-                      className="h-4 flex items-center gap-4 w-full h-full px-4 pl-8"
+                      className="flex items-center gap-4 w-full h-full px-4 pl-8"
                       style={{
                         backgroundColor: actived ? "white" : "transparent",
                         color: "black",
@@ -197,7 +197,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             />
           )}
       </Header>
-      <Content >
+      <Content className="bg-white">
          
             {children}
 
