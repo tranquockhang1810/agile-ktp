@@ -1,10 +1,16 @@
 "use client";
-import SwiperCard from "../component/swiper";
+
+import { useAuth } from "@/context/auth/useAuth";
+import SwiperCard from "../component/swiper"; 
 
 const Home = () => {
-    return (
-       <SwiperCard />
+  const { user } = useAuth(); 
 
-    );
-    }
+  return (
+    <div className="flex flex-col items-center min-h-screen bg-gray-100">
+      <SwiperCard />
+    </div>
+  );
+};
+
 export default Home;

@@ -7,7 +7,7 @@ const SwiperCard = () => {
   return (
     <div className="flex">
       {/* LEFT: Text section */}
-      <div className=" py-12 px-6 flex-1">
+      <div className=" py-12 px-6">
         <h2 className="text-5xl font-bold leading-snug text-black">
           Mua Sách Với <span className="text-blue-700">Giá Tốt Nhất</span>
         </h2>
@@ -19,7 +19,7 @@ const SwiperCard = () => {
       </div>
 
       {/* RIGHT: Swiper section */}
-      <div className="flex-1 flex justify-center items-center py-12 px-6">
+      <div className=" flex justify-center items-center py-12 px-6">
         <Swiper
           effect={"cards"}
           grabCursor={true}

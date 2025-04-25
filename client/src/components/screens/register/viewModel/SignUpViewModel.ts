@@ -1,17 +1,19 @@
 import { AuthenRepo } from "@/api/features/authenticate/AuthenRepo";
 import { RegisterRequestModel } from "@/api/features/authenticate/model/RegisterModel";
-import { log } from "console";
+import { useAuth } from "@/context/auth/useAuth";
+import { message } from "antd";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const SignUpViewModel = (repo: AuthenRepo) => {
-
-    
+    const {onSignUp} = useAuth();
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    
+    const router = useRouter();
+
     const handleSignUp = async (data: RegisterRequestModel) => {
-       try {
-        console.log("Sign up data:", data);
-        
+        try {
+            console.log("data", data);
+
             setIsLoading(true);
             const response = await repo.register({
                 name: data.name,
@@ -19,30 +21,30 @@ const SignUpViewModel = (repo: AuthenRepo) => {
                 phone: data.phone,
                 address: data.address,
                 password: data.password,
-                
             });
-            console.log("Đăng ký thành công:", response); // check có bị lỗi ở đây không
-            if (!response.error) {
-                console.log("Sign up successful:", response.data);
-                
+
+            if (response && !response.error) {
+                console.log("response success", response);
+                message.success("Đăng ký thành công!");
+                // onSignUp(response);
             } else {
-                console.error("Sign up failed:", response.data);
-                console.log("Error message:", response.error.message);
-                
-                // Handle sign up failure (e.g., show error message)
+                console.log("response error", response);
+                message.error("Đăng ký thất bại!");
             }
-        }
-        catch (error) {
+            return response;
+        } catch (error) {
+            console.log("error", error);
             console.error("Error during sign up:", error);
-        }
-        finally {
+            message.error("Đã xảy ra lỗi trong quá trình đăng ký!");
+        } finally {
             setIsLoading(false);
         }
     };
-    
+
     return {
         isLoading,
         handleSignUp,
     };
-    }
+};
+
 export default SignUpViewModel;

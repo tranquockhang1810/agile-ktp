@@ -42,6 +42,7 @@ class AuthManager {
     };
   }
 
+
   public getUser() {
     return this.user;
   }
@@ -50,15 +51,27 @@ class AuthManager {
     return this.isAuthenticated;
   }
 
-
   public onLogin(user: any) {
+
     if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem("user", JSON.stringify(user.user));
-      localStorage.setItem("accesstoken", user.access_token);
+      localStorage.setItem("user", JSON.stringify(user.data.user));
+      localStorage.setItem("accesstoken", user.data.accessToken);
     }
 
     this.isAuthenticated = true;
-    this.user = user.user;
+    this.user = user.data.user;
+    this.notifyListeners();
+    this.router.push("/home");
+  }
+
+  public onSignUp(user: any) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem("user", JSON.stringify(user.data.user));
+      localStorage.setItem("accesstoken", user.data.accessToken);
+    }
+
+    this.isAuthenticated = true;
+    this.user = user.data.user;
     this.notifyListeners();
     this.router.push("/home");
   }
@@ -102,8 +115,7 @@ class AuthManager {
         } else {
           this.isAuthenticated = false;
         }
-      } catch (error) {
-        console.error("Failed to parse stored user data:", error);
+      } catch (error) { 
         localStorage.removeItem("user");
         this.isAuthenticated = false;
       }
@@ -129,15 +141,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     return unsubscribe;
   }, [authManager]);
 
-  useEffect(() => {
+  useEffect(() => {  
     authManager.checkAuthStatus(); 
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
+        onSignUp: authManager.onSignUp.bind(authManager),
         onLogin: authManager.onLogin.bind(authManager),
-        onLogout: authManager.onLogout.bind(authManager), 
+        onLogout: authManager.onLogout.bind(authManager),
         isAuthenticated: authManager.getIsAuthenticated(),
         user: authManager.getUser(),
         onUpdateProfile: authManager.onUpdateProfile.bind(authManager),

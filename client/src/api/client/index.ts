@@ -29,6 +29,28 @@ api.interceptors.request.use(
   }
 );
 
+//Response interceptors
+api.interceptors.response.use(
+  (response) => {
+    return response?.data;
+  },
+  (error) => {
+    console.error("Response error:",error);
+    error.response || error;
+    if (error?.response?.status === 401 || error?.response?.status === 403) {
+      Modal.error({
+        title: "Session expired",
+        content: "Your session has expired. Please log in again.",
+        onOk() {
+          localStorage.removeItem("accesstoken");
+          window.location.href = "/login";
+        },
+      });
+    }
+    return Promise.resolve(error?.response?.data);
+  }
+);
+
 class AxiosClient implements IApiClient {
   async post<T extends Object>(
     path: string,

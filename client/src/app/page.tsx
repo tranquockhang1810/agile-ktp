@@ -1,23 +1,24 @@
 "use client";
-// import { useAuth } from '@/context/auth/useAuth';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+
+import { useAuth } from "@/context/auth/useAuth";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const Page = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  // const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-      router.push('/home'); 
-  }, [ router]);
+    if (isAuthenticated) {
+      router.push("/home");
+    } else {
+      router.push("/login");
+    }
+  }, [isAuthenticated, router]);
 
   return (
     <div className="w-screen h-screen flex justify-center items-center bg-white">
-      <img 
-        src="/image/logo.png" 
-        alt="Book Store" 
-      />
+      <img src="/image/logo.png" alt="Book Store" />
     </div>
   );
 };
