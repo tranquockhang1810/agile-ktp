@@ -3,7 +3,7 @@ import { LoginRequestModel } from "@/api/features/authenticate/model/LoginModel"
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CustomStatusCode } from "@/utils/helper/CustomStatus";
+import { ApiPath } from "@/api/ApiPath";
 
 interface LoginObserver {
   onLoginStateChanged: (isLoading: boolean, error?: string) => void;
@@ -11,7 +11,7 @@ interface LoginObserver {
 }
 
 const LoginViewModel = (repo: AuthenRepo) => {
-  const { onLogin, localStrings } = useAuth();
+  const { onLogin } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(false); 
@@ -37,26 +37,15 @@ const LoginViewModel = (repo: AuthenRepo) => {
       notifyLoading(true);
       const res = await repo.login(data);
   
-      if (res?.data && typeof res.data.accessToken === "string") {
-        try { 
-          onLogin(res.data);
-          notifyLoading(false);
-          notifySuccess(res.data);
-          setTimeout(() => router.replace("/home"), 100);
-        } catch (navError) { 
-          notifyLoading(false, localStrings.Login.LoginFailed);
-        }
-      } else { 
-        if (res?.error?.code === CustomStatusCode.EmailOrPasswordIsWrong) {
-          notifyLoading(false, localStrings.Login.LoginFailed);
-        } else if (res?.error?.code === CustomStatusCode.AccountBlockedByAdmin) {
-          notifyLoading(false, localStrings.Login.AccountLocked);
-        } else {
-          notifyLoading(false, localStrings.Login.LoginFailed);
-        }
+      if (res && !res.error) {
+        notifyLoading(false);
+        notifySuccess(res);
+        onLogin(res);
+      } else {
+        notifyLoading(false, "Sai tài khoản hoặc mật khẩu!");
       }
     } catch (error: any) { 
-      notifyLoading(false, localStrings.Login.LoginFailed);
+      notifyLoading(false, "Lỗi đăng nhập, vui lòng thử lại sau!");
     } finally {
       setLoading(false);
     }
@@ -64,9 +53,9 @@ const LoginViewModel = (repo: AuthenRepo) => {
 
   useEffect(() => {
     if (error) {
-      notifyLoading(false, localStrings.Login.LoginFailed);
+      notifyLoading(false,"Lỗi đăng nhập, vui lòng thử lại sau!");
     }
-  }, [error, localStrings]);
+  }, [error]);
 
   return { login, loading, addObserver, removeObserver };
 };

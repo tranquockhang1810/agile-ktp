@@ -8,17 +8,11 @@ import React, {
   useEffect,
 } from "react";
 import { AuthContextType } from "./authContextType";
-import { VnLocalizedStrings } from "@/utils/localizedStrings/vietnam";
-import { ENGLocalizedStrings } from "@/utils/localizedStrings/english";
-import translateLanguage from "../../utils/i18n/translateLanguage";
 import { useRouter } from "next/navigation";
 import { UserModel } from "../../api/features/authenticate/model/LoginModel";
-import { jwtDecode } from "jwt-decode";
 
 class AuthManager {
   private static instance: AuthManager;
-  private localStrings: any = VnLocalizedStrings;
-  private language: "vi" | "en" = "vi";
   private user: UserModel | null = null;
   private isAuthenticated: boolean = false;
   private router: any;
@@ -48,13 +42,6 @@ class AuthManager {
     };
   }
 
-  public getLocalStrings() {
-    return this.localStrings;
-  }
-
-  public getLanguage() {
-    return this.language;
-  }
 
   public getUser() {
     return this.user;
@@ -64,48 +51,27 @@ class AuthManager {
     return this.isAuthenticated;
   }
 
-  public checkLanguage() {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const storedLanguage = localStorage.getItem("language");
-      if (storedLanguage === "vi") {
-        this.language = "vi";
-        this.localStrings = VnLocalizedStrings;
-      } else {
-        this.language = "en";
-        this.localStrings = ENGLocalizedStrings;
-      }
-    }
-    this.notifyListeners();
-  }
-
-  public changeLanguage() {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const lng = this.language === "vi" ? "en" : "vi";
-      translateLanguage(lng).then(() => {
-        localStorage.setItem("language", lng);
-        this.language = lng;
-        this.localStrings = lng === "vi" ? VnLocalizedStrings : ENGLocalizedStrings;
-        this.notifyListeners();
-      });
-    }
-  }
-
   public onLogin(user: any) {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem("user", JSON.stringify(user.user));
-      localStorage.setItem("accesstoken", user.accessToken);
 
-      const decodedToken: any = jwtDecode(user.accessToken);
-      const expiresAt = new Date(decodedToken.exp * 1000);
-      document.cookie = `accesstoken=${user.accessToken}; path=/; ${
-        window.location.protocol === 'http:'
-          ? 'SameSite=Lax'
-          : 'SameSite=None; Secure'
-      }; expires=${expiresAt.toUTCString()}`;
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem("user", JSON.stringify(user.data.user));
+      localStorage.setItem("accesstoken", user.data.accessToken);
     }
 
     this.isAuthenticated = true;
-    this.user = user.user;
+    this.user = user.data.user;
+    this.notifyListeners();
+    this.router.push("/home");
+  }
+
+  public onSignUp(user: any) {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem("user", JSON.stringify(user.data.user));
+      localStorage.setItem("accesstoken", user.data.accessToken);
+    }
+
+    this.isAuthenticated = true;
+    this.user = user.data.user;
     this.notifyListeners();
     this.router.push("/home");
   }
@@ -125,8 +91,7 @@ class AuthManager {
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.removeItem("user");
       localStorage.removeItem("accesstoken");
-      document.cookie =
-        "accesstoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
     }
     this.isAuthenticated = false;
     this.user = null;
@@ -176,20 +141,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     return unsubscribe;
   }, [authManager]);
 
-  useEffect(() => {
-    authManager.checkLanguage();  
+  useEffect(() => {  
     authManager.checkAuthStatus(); 
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
+        onSignUp: authManager.onSignUp.bind(authManager),
         onLogin: authManager.onLogin.bind(authManager),
         onLogout: authManager.onLogout.bind(authManager),
-        localStrings: authManager.getLocalStrings(),
-        changeLanguage: authManager.changeLanguage.bind(authManager),
-        language: authManager.getLanguage(),
-        setLanguage: () => { },  
         isAuthenticated: authManager.getIsAuthenticated(),
         user: authManager.getUser(),
         onUpdateProfile: authManager.onUpdateProfile.bind(authManager),

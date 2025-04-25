@@ -32,7 +32,7 @@ const Login = () => {
 
   return (
     <div
-      className="w-[600px] p-6 h-full border border-gray-300 rounded-lg shadow-lg bg-white flex flex-col justify-center items-center mx-auto mt-6"
+      className="max-w-[600px] p-6 h-full border border-gray-300 rounded-lg shadow-lg bg-white flex flex-col justify-center items-center mx-auto mt-6"
       style={{ boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" }}
     >
       <Spin spinning={loading} tip={"Đang đăng nhập..."} size="large">
@@ -48,7 +48,7 @@ const Login = () => {
             <img
               src="/image/logo.png"
               alt="YourVibes"
-              className="font-cursive text-black w-[60%] sm:w-[50%] md:w-[40%] lg:hidden block"
+              className="font-cursive text-black w-[60%] sm:w-[50%] md:w-[40%]"
             />
           </div>
           <Form.Item
