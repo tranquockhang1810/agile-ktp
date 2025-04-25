@@ -14,9 +14,7 @@ export class AuthenRepo implements IAuthenRepo {
     return client.post(ApiPath.LOGIN, data);
   }
 
-  async register(data: RegisterRequestModel): Promise<BaseApiResponseModel<UserModel>> {
-    console.log("Api", ApiPath.REGISTER, data);
-    
+  async register(data: RegisterRequestModel): Promise<BaseApiResponseModel<UserModel>> {   
     return client.post(ApiPath.REGISTER, data);
   }
 }
