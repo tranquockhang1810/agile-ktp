@@ -40,14 +40,14 @@ class AuthService {
     const user = await UserRepository.getUserByEmail(email);
     if (!user) {
       const error = new Error('Invalid email or password');
-      error.status = 401;
+      error.status = 400;
       throw error;
     }
 
     const isMatch = await TokenService.comparePassword(password, user.password);
     if (!isMatch) {
       const error = new Error('Invalid email or password');
-      error.status = 401;
+      error.status = 400;
       throw error;
     }
 
