@@ -9,13 +9,15 @@ import {
   Modal,
   Avatar,
   Button,
+  Dropdown,
 } from "antd";
 import { createElement } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Content, Header } from "antd/es/layout/layout";
 import Sider from "antd/es/layout/Sider";
-import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import { DownOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ShoppingCartOutlined, ShoppingOutlined } from "@ant-design/icons";
 import useColor from "@/hooks/useColor";
+import { useAuth } from "@/context/auth/useAuth";
 
 const { useBreakpoint } = Grid;
 
@@ -28,6 +30,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const screens = useBreakpoint();
   const [collapsed, setCollapsed] = useState(false);
   const [logoutModal, setLogoutModal] = useState(false);
+  const { user, onLogout } = useAuth(); 
 
   const isActived = (link: string) => {
     const [basePath, queryString] = link.split("?");
@@ -55,6 +58,16 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     setVisible(false);
   };
 
+  const menuItems = [
+    {
+      key: "logout",
+      label: <span onClick={() => {
+        onLogout(),
+        console.log("đăng xuất");
+        ; // Gọi hàm logout
+      }}>Đăng xuất</span>,
+    },
+  ];
   //   const handleLogout = () => {
   //     onLogout();
   //     setLogoutModal(false);
@@ -66,8 +79,12 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     { label: `Trang chủ`, link: "/home" },
     { label: `Cửa hàng`, link: "/shop" },
     { label: `Liên hệ`, link: "/contact" },
-    { label: `Đăng nhập`, link: "/login" },
-    { label: `Đăng ký`, link: "/register" },
+    ...(!user
+      ? [
+          { label: `Đăng nhập`, link: "/login" },
+          { label: `Đăng ký`, link: "/register" },
+        ]
+      : []),
   ];
 
   return (
@@ -118,7 +135,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 key: index.toString(),
                 label: (
                     <div
-                      className="h-4 flex items-center gap-4 w-full h-full px-4 pl-8"
+                      className="flex items-center gap-4 w-full h-full px-4 pl-8"
                       style={{
                         backgroundColor: actived ? "white" : "transparent",
                         color: "black",
@@ -155,21 +172,30 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         style={{
             position: "sticky",
             top: 0,
-            backgroundColor: screens.lg ? "#F5F5F5" : backgroundColor,
+            backgroundColor: backgroundColor,
             display: "flex",
-            justifyContent: "space-between",
+                        justifyContent: "space-between",
             alignItems: "center",
             width: "100%",
             zIndex: 100,
             padding: 0,
-          }}>
-      <div
+          }}>      <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "10px",
+              paddingLeft: "10px",
             }}
-          >
+          >        {!screens.lg && (
+         
+           <Button
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => handleMenuClick()}
+              style={{ fontSize: "20px", marginRight: "5px" }}
+            />
+          )}
+    
+       
             <img
               src="/image/logo.png"
               alt="YourVibes"
@@ -177,7 +203,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               onClick={() => router.push("/home")}
             />
           </div>
-        <Menu
+          {screens.lg && ( <Menu
           mode="horizontal"
           theme="light"
           defaultSelectedKeys={["2"]}
@@ -186,18 +212,31 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
             label: item.label,
             onClick: () => handleItemClick(item.link),
             }))}
-          style={{ flex: 1, minWidth: 0 }}
+          style={{ flex: 1, minWidth: 0, }}
         />
-        {!screens.lg && (
-            <Button
-              type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => handleMenuClick()}
-              style={{ fontSize: "20px", marginRight: "16px" }}
-            />
-          )}
+            )}
+       
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+         <div> 
+        {user ? (
+           <Dropdown menu={{ items: menuItems }} placement="bottomRight" arrow>
+           <p className="cursor-pointer hover:text-blue-500 flex items-center gap-1">
+             Xin chào, {user.name}! <DownOutlined />
+           </p>
+         </Dropdown>
+        ) : (
+          <p className="" onClick={() => router.push("/login")}>Đăng nhập</p>
+        )}
+      </div>
+        <ShoppingOutlined style={{ fontSize: "30px", marginRight: "16px" }} onClick={() => router.push("/cart")} />
+        </div>
       </Header>
-      <Content >
+      <Content className="bg-white">
          
             {children}
 
