@@ -96,7 +96,7 @@ class AuthManager {
     this.isAuthenticated = false;
     this.user = null;
     this.notifyListeners();
-    this.router.push("/login");
+    this.router.push("/home");
   }
 
   public isLoginUser(userId: string) {

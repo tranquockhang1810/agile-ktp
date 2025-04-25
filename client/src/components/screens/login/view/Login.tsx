@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Form, Input, Spin } from "antd";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { defaultAuthenRepo } from "@/api/features/authenticate/AuthenRepo";
 import LoginViewModel from "@/components/screens/login/viewModel/LoginViewModel";
 import { LoginRequestModel } from "@/api/features/authenticate/model/LoginModel";
@@ -9,6 +9,7 @@ import { LoginRequestModel } from "@/api/features/authenticate/model/LoginModel"
 const Login = () => {
   const { login, loading, addObserver, removeObserver } = LoginViewModel(defaultAuthenRepo);
   const [form] = Form.useForm();
+  const [error, setError] = useState<string | null>(null);
 
   const onFinish = async (values: LoginRequestModel) => {
     await login({ email: values.email, password: values.password });
@@ -18,7 +19,7 @@ const Login = () => {
     const observer = {
       onLoginStateChanged: (isLoading: boolean, error?: string) => {
         if (error) {
-          form.setFields([{ name: "email", errors: [error] }]);
+         setError(error);
         }
       },
       onLoginSuccess: (data: any) => { 
@@ -72,6 +73,11 @@ const Login = () => {
               className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </Form.Item>
+          {error && (
+            <div className="text-red-500">
+              {error}
+            </div>
+          )}
           <div className="mb-4 text-center text-xs">
             <a href="/forgotPassword" className="text-blue-500 hover:underline">
               {"Quên mật khẩu?"}

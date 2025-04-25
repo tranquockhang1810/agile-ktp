@@ -58,16 +58,16 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     setVisible(false);
   };
 
-  const menu = (
-    <Menu
-      items={[
-        {
-          key: "logout",
-          label: <span onClick={onLogout}>Đăng xuất</span>,
-        },
-      ]}
-    />
-  );
+  const menuItems = [
+    {
+      key: "logout",
+      label: <span onClick={() => {
+        onLogout(),
+        console.log("đăng xuất");
+        ; // Gọi hàm logout
+      }}>Đăng xuất</span>,
+    },
+  ];
   //   const handleLogout = () => {
   //     onLogout();
   //     setLogoutModal(false);
@@ -79,8 +79,12 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     { label: `Trang chủ`, link: "/home" },
     { label: `Cửa hàng`, link: "/shop" },
     { label: `Liên hệ`, link: "/contact" },
-    { label: `Đăng nhập`, link: "/login" },
-    { label: `Đăng ký`, link: "/register" },
+    ...(!user
+      ? [
+          { label: `Đăng nhập`, link: "/login" },
+          { label: `Đăng ký`, link: "/register" },
+        ]
+      : []),
   ];
 
   return (
@@ -220,7 +224,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         >
          <div> 
         {user ? (
-           <Dropdown overlay={menu} placement="bottomRight" arrow>
+           <Dropdown menu={{ items: menuItems }} placement="bottomRight" arrow>
            <p className="cursor-pointer hover:text-blue-500 flex items-center gap-1">
              Xin chào, {user.name}! <DownOutlined />
            </p>
