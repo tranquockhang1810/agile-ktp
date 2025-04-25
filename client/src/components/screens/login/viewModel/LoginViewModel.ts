@@ -3,6 +3,7 @@ import { LoginRequestModel } from "@/api/features/authenticate/model/LoginModel"
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ApiPath } from "@/api/ApiPath";
 
 interface LoginObserver {
   onLoginStateChanged: (isLoading: boolean, error?: string) => void;
@@ -31,13 +32,10 @@ const LoginViewModel = (repo: AuthenRepo) => {
   const error = useMemo(() => searchParams.get("error"), [searchParams]);
 
   const login = async (data: LoginRequestModel) => {
-    console.log("LoginViewModel: login", data);
-    
     try {
       setLoading(true);
       notifyLoading(true);
       const res = await repo.login(data);
-  console.log("LoginViewModel: login response", res);
   
       if (res && !res.error) {
         notifyLoading(false);

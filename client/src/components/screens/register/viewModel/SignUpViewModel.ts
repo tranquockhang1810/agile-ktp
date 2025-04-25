@@ -24,16 +24,19 @@ const SignUpViewModel = (repo: AuthenRepo) => {
             });
 
             if (response && !response.error) {
-                console.log("response success", response);
                 message.success("Đăng ký thành công!");
-                // onSignUp(response);
+                onSignUp(response);
             } else {
-                console.log("response error", response);
+                if(response.error.code === 400) {
+                    message.error("Email đã tồn tại!");
+                }
+                if(response.error.code === 500) {
+                    message.error("Đã xảy ra lỗi trong quá trình đăng ký!");
+                }
                 message.error("Đăng ký thất bại!");
             }
             return response;
         } catch (error) {
-            console.log("error", error);
             console.error("Error during sign up:", error);
             message.error("Đã xảy ra lỗi trong quá trình đăng ký!");
         } finally {
